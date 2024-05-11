@@ -38,12 +38,18 @@ const rss = () => {
     const url = input.value;
     const validationResult = validate(url);
 
-    validationResult.then(() => {
-      watchedState.rssForm.state = 'valid';
-      watchedState.rssForm.errors = [];
-    }).catch((error) => {
-      watchedState.rssForm.state = 'invalid';
-      watchedState.errors = [...error];
+    validationResult.then((valid) => {
+      if (valid) {
+        watchedState.rssForm.state = 'valid';
+        watchedState.rssForm.errors = [];
+        console.log('success!');
+        console.log(validationResult);
+      } else {
+        watchedState.rssForm.state = 'invalid';
+        watchedState.rssForm.errors = [];
+        console.log('error!');
+        console.log(validationResult);
+      }
     });
   });
 };
