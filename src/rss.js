@@ -29,10 +29,10 @@ export default (texts) => {
     validationResult.then(() => {
       watchedState.rssForm.state = 'valid';
       watchedState.rssForm.errors = '';
+      watchedState.rssForm.state = 'default';
     }).catch((error) => {
       watchedState.rssForm.state = 'invalid';
       [watchedState.rssForm.errors] = error.errors;
-      console.log(error);
     }).then(() => {
       const findBtns = () => {
         const btns = document.querySelectorAll('[data-bs-toggle]');
@@ -42,6 +42,8 @@ export default (texts) => {
             watchedState.rssModalCard.activeId = currentId;
           });
         });
+
+        setTimeout(findBtns, 5000);
       };
 
       setTimeout(findBtns, 1000);

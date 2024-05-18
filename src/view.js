@@ -19,57 +19,48 @@ const formFeeds = (element, section) => {
   const title = element.querySelector('title');
   const description = element.querySelector('description');
 
-  const place = document.createElement('li');
-  place.classList.add('list-group-item', 'border-0', 'border-end-0');
-
-  const listItemHead = document.createElement('h3');
-  listItemHead.classList.add('h6', 'm-0');
-  listItemHead.textContent = title.textContent;
-
-  const listItemDescription = document.createElement('p');
-  listItemDescription.classList.add('m-0', 'small', 'text-black-50');
-  listItemDescription.textContent = description.textContent;
-
-  place.replaceChildren(listItemHead, listItemDescription);
-  section.append(place);
-
   const id = generateUniqID(feedIds);
   const thisFeed = {
     id,
     head: title.textContent,
     description: description.textContent,
   };
+
   feedContainer.push(thisFeed);
+
+  feedContainer.forEach((feed) => {
+    const place = document.createElement('li');
+    place.classList.add('list-group-item', 'border-0', 'border-end-0');
+
+    const listItemHead = document.createElement('h3');
+    listItemHead.classList.add('h6', 'm-0');
+    listItemHead.textContent = feed.head;
+
+    const listItemDescription = document.createElement('p');
+    listItemDescription.classList.add('m-0', 'small', 'text-black-50');
+    listItemDescription.textContent = feed.description;
+
+    place.replaceChildren(listItemHead, listItemDescription);
+    section.append(place);
+  });
 
   return id;
 };
 
-const formPost = (element, section, feedId) => {
+const addPost = (element, feedId) => {
   const title = element.querySelector('title');
   const description = element.querySelector('description');
   const link = element.querySelector('link');
 
-  const place = document.createElement('li');
-  place.classList.add('list-group-item', 'border-0', 'border-end-0');
+  const notAlreadyLoaded = postContainer.every((post) => (title.textContent !== post.head)
+  && (link.textContent !== post.link)
+  && (description.textContent !== post.description));
+
+  if (!notAlreadyLoaded) {
+    return;
+  }
 
   const id = generateUniqID(postIds);
-
-  const listItemName = document.createElement('a');
-  listItemName.setAttribute('href', link.textContent);
-  listItemName.classList.add('fw-bold');
-  listItemName.setAttribute('data-id', id);
-  listItemName.textContent = title.textContent;
-
-  const viewBtn = document.createElement('button');
-  viewBtn.classList.add('btn', 'btn-outline-primary', 'btn-sm');
-  viewBtn.setAttribute('type', 'button');
-  viewBtn.setAttribute('data-id', id);
-  viewBtn.setAttribute('data-bs-toggle', 'modal');
-  viewBtn.setAttribute('data-bs-target', '#modal');
-  viewBtn.textContent = 'Просмотр';
-
-  place.replaceChildren(listItemName, viewBtn);
-  section.append(place);
 
   const thisPost = {
     id,
@@ -80,6 +71,35 @@ const formPost = (element, section, feedId) => {
   };
 
   postContainer.push(thisPost);
+};
+
+const formPostList = (section) => {
+  const oldList = section.querySelector('ul');
+  const newList = document.createElement('ul');
+
+  postContainer.forEach((post) => {
+    const place = document.createElement('li');
+    place.classList.add('list-group-item', 'border-0', 'border-end-0');
+
+    const listItemName = document.createElement('a');
+    listItemName.setAttribute('href', post.link);
+    listItemName.classList.add('fw-bold');
+    listItemName.setAttribute('data-id', post.id);
+    listItemName.textContent = post.head;
+
+    const viewBtn = document.createElement('button');
+    viewBtn.classList.add('btn', 'btn-outline-primary', 'btn-sm');
+    viewBtn.setAttribute('type', 'button');
+    viewBtn.setAttribute('data-id', post.id);
+    viewBtn.setAttribute('data-bs-toggle', 'modal');
+    viewBtn.setAttribute('data-bs-target', '#modal');
+    viewBtn.textContent = 'Просмотр';
+
+    place.replaceChildren(listItemName, viewBtn);
+    newList.append(place);
+  });
+
+  oldList.replaceWith(newList);
 };
 
 const createFeedPostsSections = (section) => {
@@ -94,7 +114,7 @@ const createFeedPostsSections = (section) => {
 
   head.textContent = headText;
   card.replaceChildren(head, list);
-  section.append(card);
+  section.replaceChildren(card);
 };
 
 const prepareElements = () => {
@@ -126,28 +146,50 @@ export default (texts) => {
 
   const render = (path, value) => {
     if (path === 'rssForm.state') {
-      if (value !== 'valid') {
+      if (value === 'invalid') {
         input.classList.add('is-invalid');
         feedback.classList.add('text-danger');
-      } else {
+      } else if (value === 'valid') {
         input.classList.remove('is-invalid');
         feedback.classList.remove('text-danger');
         feedback.classList.add('text-success');
         feedback.textContent = texts.t('rssForm.success');
         const url = new URL(input.value);
-        const feed = getFlow(url);
-        feed.then((data) => {
+        const flow = getFlow(url);
+
+        let currentId;
+
+        flow.then((data) => {
           const parsedData = parser(data.data.contents);
 
           [feeds, posts].forEach(createFeedPostsSections);
 
           const thisFeedId = formFeeds(parsedData, feeds);
           const postItems = parsedData.querySelectorAll('item');
-          postItems.forEach((post) => formPost(post, posts, thisFeedId));
+          postItems.forEach((post) => addPost(post, thisFeedId));
+
+          formPostList(posts);
+
+          currentId = thisFeedId;
         });
 
         input.value = '';
         rssForm.focus();
+
+        const updatePosts = (feedId) => {
+          const refresh = getFlow(url);
+          refresh.then((data) => {
+            const parsedData = parser(data.data.contents);
+            const postItems = parsedData.querySelectorAll('item');
+            postItems.forEach((post) => addPost(post, feedId));
+          });
+
+          formPostList(posts);
+
+          setTimeout(updatePosts, 5000, currentId);
+        };
+
+        setTimeout(updatePosts, 5000, currentId);
       }
     }
 
