@@ -5,8 +5,11 @@ import view from './view';
 export default (texts) => {
   const state = {
     rssForm: {
-      state: 'valid',
+      state: 'default',
       errors: '',
+    },
+    rssModalCard: {
+      activeId: '',
     },
   };
 
@@ -29,6 +32,19 @@ export default (texts) => {
     }).catch((error) => {
       watchedState.rssForm.state = 'invalid';
       [watchedState.rssForm.errors] = error.errors;
+      console.log(error);
+    }).then(() => {
+      const findBtns = () => {
+        const btns = document.querySelectorAll('[data-bs-toggle]');
+        btns.forEach((button) => {
+          button.addEventListener('click', () => {
+            const currentId = button.dataset.id;
+            watchedState.rssModalCard.activeId = currentId;
+          });
+        });
+      };
+
+      setTimeout(findBtns, 1000);
     });
   });
 };
