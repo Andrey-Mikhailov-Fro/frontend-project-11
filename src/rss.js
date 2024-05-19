@@ -11,12 +11,21 @@ export default (texts) => {
     rssModalCard: {
       activeId: '',
     },
+    uiState: {
+      readPosts: [],
+    },
+    feeds: [],
+    posts: [],
   };
 
   const rssForm = document.querySelector('.rss-form');
   const input = rssForm.querySelector('#url-input');
 
-  const render = view(texts);
+  const [render, feeds, posts, readPosts] = view(texts);
+
+  state.feeds = feeds;
+  state.posts = posts;
+  state.uiState.readPosts = readPosts;
 
   const watchedState = onChange(state, render);
 
@@ -40,6 +49,12 @@ export default (texts) => {
           button.addEventListener('click', () => {
             const currentId = button.dataset.id;
             watchedState.rssModalCard.activeId = currentId;
+            const isNewReadPost = watchedState.uiState.readPosts
+              .every((post) => post.id !== currentId);
+
+            if (isNewReadPost) {
+              watchedState.uiState.readPosts.push({ id: currentId });
+            }
           });
         });
 

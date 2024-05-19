@@ -7,6 +7,7 @@ const feedIds = [];
 
 const feedContainer = [];
 const postContainer = [];
+const readPosts = [];
 
 const generateUniqID = (exisitngIds) => {
   const newId = Math.round(Math.random() * 1000);
@@ -28,6 +29,8 @@ const formFeeds = (element, section) => {
 
   feedContainer.push(thisFeed);
 
+  const list = section.querySelector('ul');
+
   feedContainer.forEach((feed) => {
     const place = document.createElement('li');
     place.classList.add('list-group-item', 'border-0', 'border-end-0');
@@ -41,7 +44,7 @@ const formFeeds = (element, section) => {
     listItemDescription.textContent = feed.description;
 
     place.replaceChildren(listItemHead, listItemDescription);
-    section.append(place);
+    list.append(place);
   });
 
   return id;
@@ -81,9 +84,12 @@ const formPostList = (section) => {
     const place = document.createElement('li');
     place.classList.add('list-group-item', 'border-0', 'border-end-0');
 
+    const notRead = readPosts.every((link) => link.id !== post.id.toString());
+    const font = notRead ? 'fw-bold' : 'fw-normal';
+
     const listItemName = document.createElement('a');
     listItemName.setAttribute('href', post.link);
-    listItemName.classList.add('fw-bold');
+    listItemName.classList.add(font);
     listItemName.setAttribute('data-id', post.id);
     listItemName.textContent = post.head;
 
@@ -209,6 +215,20 @@ export default (texts) => {
       modalBody.textContent = currentPost.description;
       readAllBtn.setAttribute('href', currentPost.link);
     }
+
+    if (path === 'uiState.readPosts') {
+      const links = posts.querySelectorAll('a');
+      links.forEach((link) => {
+        const { id } = link.dataset;
+
+        value.forEach((post) => {
+          if (id === post.id) {
+            link.classList.remove('fw-bold');
+            link.classList.add('fw-normal');
+          }
+        });
+      });
+    }
   };
 
   head.textContent = texts.t('rssForm.head');
@@ -218,5 +238,5 @@ export default (texts) => {
   submitBtn.textContent = texts.t('rssForm.submitBtn');
   example.textContent = texts.t('rssForm.example');
 
-  return render;
+  return [render, feedContainer, postContainer, readPosts];
 };
