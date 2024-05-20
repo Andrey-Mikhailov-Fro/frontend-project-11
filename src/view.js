@@ -157,9 +157,7 @@ export default (texts) => {
         feedback.classList.add('text-danger');
       } else if (value === 'valid') {
         input.classList.remove('is-invalid');
-        feedback.classList.remove('text-danger');
-        feedback.classList.add('text-success');
-        feedback.textContent = texts.t('rssForm.success');
+
         const url = new URL(input.value);
         const flow = getFlow(url);
 
@@ -174,28 +172,36 @@ export default (texts) => {
           const postItems = parsedData.querySelectorAll('item');
           postItems.forEach((post) => addPost(post, thisFeedId));
 
+          feedback.classList.remove('text-danger');
+          feedback.classList.add('text-success');
+          feedback.textContent = texts.t('rssForm.success');
+
           formPostList(posts);
 
           currentId = thisFeedId;
-        });
+        }).then(() => {
+          input.value = '';
+          rssForm.focus();
 
-        input.value = '';
-        rssForm.focus();
+          const updatePosts = (feedId) => {
+            const refresh = getFlow(url);
+            refresh.then((data) => {
+              const parsedData = parser(data.data.contents);
+              const postItems = parsedData.querySelectorAll('item');
+              postItems.forEach((post) => addPost(post, feedId));
+            });
 
-        const updatePosts = (feedId) => {
-          const refresh = getFlow(url);
-          refresh.then((data) => {
-            const parsedData = parser(data.data.contents);
-            const postItems = parsedData.querySelectorAll('item');
-            postItems.forEach((post) => addPost(post, feedId));
-          });
+            formPostList(posts);
 
-          formPostList(posts);
+            setTimeout(updatePosts, 5000, currentId);
+          };
 
           setTimeout(updatePosts, 5000, currentId);
-        };
-
-        setTimeout(updatePosts, 5000, currentId);
+        }).catch((error) => {
+          feedback.textContent = texts.t(error.message);
+          input.classList.add('is-invalid');
+          feedback.classList.add('text-danger');
+        });
       }
     }
 

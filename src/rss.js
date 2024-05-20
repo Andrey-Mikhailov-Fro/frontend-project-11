@@ -61,7 +61,7 @@ export default (texts) => {
         setTimeout(findBtns, 5000);
       };
 
-      setTimeout(findBtns, 1000);
+      setTimeout(findBtns, 1500);
     });
   });
 };
