@@ -97,7 +97,7 @@ const formPostList = (section) => {
     viewBtn.classList.add('btn', 'btn-outline-primary', 'btn-sm');
     viewBtn.setAttribute('type', 'button');
     viewBtn.setAttribute('data-id', post.id);
-    listItemName.setAttribute('data-testid', post.id);
+    viewBtn.setAttribute('data-testid', post.id);
     viewBtn.setAttribute('data-bs-toggle', 'modal');
     viewBtn.setAttribute('data-bs-target', '#modal');
     viewBtn.textContent = 'Просмотр';
