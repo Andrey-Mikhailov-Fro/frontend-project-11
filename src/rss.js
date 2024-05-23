@@ -45,6 +45,11 @@ export default (texts) => {
     }).then(() => {
       const findBtns = () => {
         const btns = document.querySelectorAll('[data-bs-toggle]');
+
+        if (btns.length === 0) {
+          setTimeout(findBtns, 500);
+        }
+
         btns.forEach((button) => {
           button.addEventListener('click', () => {
             const currentId = button.dataset.id;
@@ -61,7 +66,7 @@ export default (texts) => {
         setTimeout(findBtns, 5000);
       };
 
-      setTimeout(findBtns, 1500);
+      findBtns();
     });
   });
 };
