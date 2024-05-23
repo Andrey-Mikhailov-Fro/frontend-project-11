@@ -10,10 +10,10 @@ const postContainer = [];
 const readPosts = [];
 
 const generateUniqID = (exisitngIds) => {
-  const newId = Math.round(Math.random() * 1000);
-  const resultId = exisitngIds.includes(newId) ? generateUniqID(exisitngIds) : newId;
-  exisitngIds.push(resultId);
-  return resultId;
+  const lastId = exisitngIds.length === 0 ? 1 : exisitngIds.at(-1);
+  const newId = lastId + 1;
+  exisitngIds.push(newId);
+  return newId;
 };
 
 const formFeeds = (element, section) => {
