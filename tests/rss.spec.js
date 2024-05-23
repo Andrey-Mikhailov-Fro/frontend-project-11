@@ -17,6 +17,7 @@ test('successful scenary', async ({ page }) => {
   await expect(page.getByText('This is a constantly updating')).toBeVisible();
   await page.getByTestId('3').click();
   await expect(page.getByText('Читать полностью Закрыть')).toBeVisible();
+  await page.getByRole('button', { name: 'Закрыть' }).click();
   await page.getByPlaceholder('Ссылка RSS').click();
   await page.getByPlaceholder('Ссылка RSS').fill('https://lorem-rss.hexlet.app/feed?unit=year');
   await page.getByPlaceholder('Ссылка RSS').press('Enter');
