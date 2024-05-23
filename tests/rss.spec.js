@@ -15,7 +15,7 @@ test('successful scenary', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Фиды' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Lorem ipsum feed for an' })).toBeVisible();
   await expect(page.getByText('This is a constantly updating')).toBeVisible();
-  await page.locator('li').filter({ hasText: /Lorem ipsum 20[0-9]*-[0-9]*-[0-9]*[A-Z][0-9]*.[0-9]*./ })[0].getByRole('button').click();
+  await page.getByTestId('3').click();
   await expect(page.locator('div').filter({ hasText: /Lorem ipsum 20[0-9]*-[0-9]*-[0-9]*[A-Z][0-9]*.[0-9]*./ })).toBeVisible();
   await expect(page.getByText('Commodo minim minim nulla')).toBeVisible();
   await expect(page.getByText('Читать полностью Закрыть')).toBeVisible();
