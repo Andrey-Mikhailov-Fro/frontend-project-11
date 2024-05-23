@@ -91,6 +91,7 @@ const formPostList = (section) => {
     listItemName.setAttribute('href', post.link);
     listItemName.classList.add(font);
     listItemName.setAttribute('data-id', post.id);
+    listItemName.setAttribute('data-testid', post.id);
     listItemName.textContent = post.head;
 
     const viewBtn = document.createElement('button');
