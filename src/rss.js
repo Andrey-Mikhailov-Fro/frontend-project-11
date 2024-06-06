@@ -1,6 +1,16 @@
 import onChange from 'on-change';
 import validate from './validation';
 import view from './view';
+import parser from './parser';
+import getFlow from './getFlow';
+
+const generateUniqID = (items) => {
+  const exisitngIds = items.map((item) => item.id);
+  const lastId = exisitngIds.length === 0 ? 1 : exisitngIds.at(-1);
+  const newId = lastId + 1;
+  exisitngIds.push(newId);
+  return newId;
+};
 
 export default (texts) => {
   const state = {
@@ -9,7 +19,7 @@ export default (texts) => {
       errors: '',
     },
     rssModalCard: {
-      activeId: '',
+      activePost: {},
     },
     uiState: {
       readPosts: [],
@@ -21,11 +31,7 @@ export default (texts) => {
   const rssForm = document.querySelector('.rss-form');
   const input = rssForm.querySelector('#url-input');
 
-  const [render, feeds, posts, readPosts] = view(texts);
-
-  state.feeds = feeds;
-  state.posts = posts;
-  state.uiState.readPosts = readPosts;
+  const render = view(texts);
 
   const watchedState = onChange(state, render);
 
@@ -38,35 +44,70 @@ export default (texts) => {
     validationResult.then(() => {
       watchedState.rssForm.state = 'valid';
       watchedState.rssForm.errors = '';
-      watchedState.rssForm.state = 'default';
     }).catch((error) => {
       watchedState.rssForm.state = 'invalid';
       [watchedState.rssForm.errors] = error.errors;
-    }).then(() => {
-      const findBtns = () => {
-        const btns = document.querySelectorAll('[data-bs-toggle]');
+    }).then(() => getFlow(url))
+      .then((flow) => {
+        watchedState.rssForm.state = 'success';
 
-        if (btns.length === 0) {
-          setTimeout(findBtns, 500);
-        }
+        const { feed, posts } = parser(flow.data.contents);
 
-        btns.forEach((button) => {
-          button.addEventListener('click', () => {
-            const currentId = button.dataset.id;
-            watchedState.rssModalCard.activeId = currentId;
-            const isNewReadPost = watchedState.uiState.readPosts
-              .every((post) => post.id !== currentId);
+        feed.id = generateUniqID(state.feeds);
+        watchedState.feeds = [...state.feeds, feed];
 
-            if (isNewReadPost) {
-              watchedState.uiState.readPosts.push({ id: currentId });
-            }
-          });
+        posts.forEach((post) => {
+          const id = generateUniqID(state.posts);
+          const notAlreadyLoaded = state.posts.every((loadedPost) => (loadedPost.head !== post.head)
+          && (loadedPost.link !== post.link)
+          && (loadedPost.description !== post.description));
+          const preparedPost = { id, ...post };
+
+          if (notAlreadyLoaded) {
+            watchedState.posts = [...state.posts, preparedPost];
+          }
         });
 
-        setTimeout(findBtns, 5000);
-      };
+        const findBtns = () => {
+          const btns = document.querySelectorAll('[data-bs-toggle]');
 
-      findBtns();
-    });
+          btns.forEach((button) => {
+            button.addEventListener('click', () => {
+              const currentId = button.dataset.id;
+              const isNewReadPost = watchedState.uiState.readPosts
+                .every((post) => post.id !== currentId);
+
+              const readPost = state.posts.find((post) => post.id.toString() === currentId);
+
+              if (isNewReadPost) {
+                watchedState.uiState.readPosts = [...state.uiState.readPosts, readPost];
+              }
+
+              watchedState.rssModalCard.activePost = readPost;
+            });
+          });
+        };
+
+        const update = () => {
+          const updatedFlow = parser(flow.data.contents);
+          updatedFlow.posts.forEach((post) => {
+            const id = generateUniqID(state.posts);
+            const notLoaded = state.posts.every((loadedPost) => (loadedPost.head !== post.head)
+            && (loadedPost.link !== post.link)
+            && (loadedPost.description !== post.description));
+            const preparedPost = { id, ...post };
+
+            if (notLoaded) {
+              watchedState.posts = [...state.posts, preparedPost];
+            }
+          });
+
+          findBtns();
+
+          setTimeout(update, 5000);
+        };
+
+        update();
+      });
   });
 };

@@ -1,34 +1,6 @@
 import './styles.scss';
-import getFlow from './getFlow';
-import parser from './parser';
 
-const postIds = [];
-const feedIds = [];
-
-const feedContainer = [];
-const postContainer = [];
-const readPosts = [];
-
-const generateUniqID = (exisitngIds) => {
-  const lastId = exisitngIds.length === 0 ? 1 : exisitngIds.at(-1);
-  const newId = lastId + 1;
-  exisitngIds.push(newId);
-  return newId;
-};
-
-const formFeeds = (element, section) => {
-  const title = element.querySelector('title');
-  const description = element.querySelector('description');
-
-  const id = generateUniqID(feedIds);
-  const thisFeed = {
-    id,
-    head: title.textContent,
-    description: description.textContent,
-  };
-
-  feedContainer.push(thisFeed);
-
+const formFeeds = (section, feedContainer) => {
   const list = section.querySelector('ul');
 
   feedContainer.forEach((feed) => {
@@ -46,46 +18,17 @@ const formFeeds = (element, section) => {
     place.replaceChildren(listItemHead, listItemDescription);
     list.append(place);
   });
-
-  return id;
 };
 
-const addPost = (element, feedId) => {
-  const title = element.querySelector('title');
-  const description = element.querySelector('description');
-  const link = element.querySelector('link');
-
-  const notAlreadyLoaded = postContainer.every((post) => (title.textContent !== post.head)
-  && (link.textContent !== post.link)
-  && (description.textContent !== post.description));
-
-  if (!notAlreadyLoaded) {
-    return;
-  }
-
-  const id = generateUniqID(postIds);
-
-  const thisPost = {
-    id,
-    feedId,
-    head: title.textContent,
-    description: description.textContent,
-    link: link.textContent,
-  };
-
-  postContainer.push(thisPost);
-};
-
-const formPostList = (section) => {
+const formPostList = (section, postContainer) => {
   const oldList = section.querySelector('ul');
   const newList = document.createElement('ul');
 
   postContainer.forEach((post) => {
     const place = document.createElement('li');
-    place.classList.add('list-group-item', 'border-0', 'border-end-0');
+    place.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
 
-    const notRead = readPosts.every((link) => link.id !== post.id.toString());
-    const font = notRead ? 'fw-bold' : 'fw-normal';
+    const font = 'fw-bold';
 
     const listItemName = document.createElement('a');
     listItemName.setAttribute('href', post.link);
@@ -158,69 +101,38 @@ export default (texts) => {
         feedback.classList.add('text-danger');
       } else if (value === 'valid') {
         input.classList.remove('is-invalid');
+        feedback.classList.remove('text-danger');
+      } else if (value === 'success') {
+        feedback.classList.add('text-success');
+        feedback.textContent = texts.t('rssForm.success');
+        input.value = '';
+        rssForm.focus();
 
-        const url = new URL(input.value);
-        const flow = getFlow(url);
-
-        let currentId;
-
-        flow.then((data) => {
-          const parsedData = parser(data.data.contents);
-
-          [feeds, posts].forEach(createFeedPostsSections);
-
-          const thisFeedId = formFeeds(parsedData, feeds);
-          const postItems = parsedData.querySelectorAll('item');
-          postItems.forEach((post) => addPost(post, thisFeedId));
-
-          feedback.classList.remove('text-danger');
-          feedback.classList.add('text-success');
-          feedback.textContent = texts.t('rssForm.success');
-
-          formPostList(posts);
-
-          currentId = thisFeedId;
-        }).then(() => {
-          input.value = '';
-          rssForm.focus();
-
-          const updatePosts = (feedId) => {
-            const refresh = getFlow(url);
-            refresh.then((data) => {
-              const parsedData = parser(data.data.contents);
-              const postItems = parsedData.querySelectorAll('item');
-              postItems.forEach((post) => addPost(post, feedId));
-            });
-
-            formPostList(posts);
-
-            setTimeout(updatePosts, 5000, currentId);
-          };
-
-          setTimeout(updatePosts, 5000, currentId);
-        }).catch((error) => {
-          feedback.textContent = texts.t(error.message);
-          input.classList.add('is-invalid');
-          feedback.classList.add('text-danger');
-        });
+        [feeds, posts].forEach(createFeedPostsSections);
       }
+    }
+
+    if (path === 'feeds') {
+      formFeeds(feeds, value);
+    }
+
+    if (path === 'posts') {
+      formPostList(posts, value);
     }
 
     if (path === 'rssForm.errors') {
       feedback.textContent = texts.t(value);
     }
 
-    if (path === 'rssModalCard.activeId') {
+    if (path === 'rssModalCard.activePost') {
       const modalCard = document.querySelector('#modal');
       const modalTitle = modalCard.querySelector('.modal-title');
       const modalBody = modalCard.querySelector('.modal-body');
       const readAllBtn = modalCard.querySelector('a');
 
-      const [currentPost] = postContainer.filter((post) => post.id.toString() === value);
-
-      modalTitle.textContent = currentPost.head;
-      modalBody.textContent = currentPost.description;
-      readAllBtn.setAttribute('href', currentPost.link);
+      modalTitle.textContent = value.head;
+      modalBody.textContent = value.description;
+      readAllBtn.setAttribute('href', value.link);
     }
 
     if (path === 'uiState.readPosts') {
@@ -229,7 +141,7 @@ export default (texts) => {
         const { id } = link.dataset;
 
         value.forEach((post) => {
-          if (id === post.id) {
+          if (id === post.id.toString()) {
             link.classList.remove('fw-bold');
             link.classList.add('fw-normal');
           }
@@ -245,5 +157,5 @@ export default (texts) => {
   submitBtn.textContent = texts.t('rssForm.submitBtn');
   example.textContent = texts.t('rssForm.example');
 
-  return [render, feedContainer, postContainer, readPosts];
+  return render;
 };
