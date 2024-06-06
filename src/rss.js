@@ -44,9 +44,6 @@ export default (texts) => {
     validationResult.then(() => {
       watchedState.rssForm.state = 'valid';
       watchedState.rssForm.errors = '';
-    }).catch((error) => {
-      watchedState.rssForm.state = 'invalid';
-      [watchedState.rssForm.errors] = error.errors;
     }).then(() => getFlow(url))
       .then((flow) => {
         const { feed, posts } = parser(flow.data.contents);
@@ -114,9 +111,15 @@ export default (texts) => {
 
         update();
       })
-      .catch((e) => {
+      .catch((error) => {
         watchedState.rssForm.state = 'invalid';
-        watchedState.rssForm.errors = e.message;
+
+        if (Object.hasOwn(error, 'errors')) {
+          watchedState.rssForm.state = 'invalid';
+          [watchedState.rssForm.errors] = error.errors;
+        } else {
+          watchedState.rssForm.errors = error.message;
+        }
       });
   });
 };
