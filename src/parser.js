@@ -19,6 +19,7 @@ const addPost = (element) => {
     head: title.textContent,
     description: description.textContent,
     link: link.textContent,
+    read: false,
   };
 
   return thisPost;

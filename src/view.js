@@ -28,7 +28,7 @@ const formPostList = (section, postContainer) => {
     const place = document.createElement('li');
     place.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
 
-    const font = 'fw-bold';
+    const font = post.read ? 'fw-normal' : 'fw-bold';
 
     const listItemName = document.createElement('a');
     listItemName.setAttribute('href', post.link);

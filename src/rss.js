@@ -78,6 +78,8 @@ export default (texts) => {
 
               const readPost = state.posts.find((post) => post.id.toString() === currentId);
 
+              readPost.read = true;
+
               if (isNewReadPost) {
                 watchedState.uiState.readPosts = [...state.uiState.readPosts, readPost];
               }
