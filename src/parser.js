@@ -30,12 +30,12 @@ export default (html) => {
   const parsingError = parsedPage.querySelector('parsererror');
 
   if (parsingError) {
-    throw new Error('');
+    throw new Error('rssForm.errors.empty');
   } else {
     const testRss = parsedPage.querySelector('description');
 
     if (testRss === null) {
-      throw new Error('rssForm.errors.empty');
+      throw new Error();
     } else {
       const feed = addFeed(parsedPage);
 

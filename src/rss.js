@@ -49,9 +49,8 @@ export default (texts) => {
       [watchedState.rssForm.errors] = error.errors;
     }).then(() => getFlow(url))
       .then((flow) => {
-        watchedState.rssForm.state = 'success';
-
         const { feed, posts } = parser(flow.data.contents);
+        watchedState.rssForm.state = 'success';
 
         feed.id = generateUniqID(state.feeds);
         watchedState.feeds = [...state.feeds, feed];
@@ -89,29 +88,33 @@ export default (texts) => {
         };
 
         const update = () => {
-          const updatedFlow = parser(flow.data.contents);
-          updatedFlow.posts.forEach((post) => {
-            const id = generateUniqID(state.posts);
-            const notLoaded = state.posts.every((loadedPost) => (loadedPost.head !== post.head)
+          const updatedFlow = getFlow(url);
+          updatedFlow.then((data) => {
+            const refresh = parser(data.data.contents);
+
+            refresh.posts.forEach((post) => {
+              const id = generateUniqID(state.posts);
+              const notLoaded = state.posts.every((loadedPost) => (loadedPost.head !== post.head)
             && (loadedPost.link !== post.link)
             && (loadedPost.description !== post.description));
-            const preparedPost = { id, ...post };
+              const preparedPost = { id, ...post };
 
-            if (notLoaded) {
-              watchedState.posts = [...state.posts, preparedPost];
-            }
+              if (notLoaded) {
+                watchedState.posts = [...state.posts, preparedPost];
+              }
+            });
+
+            findBtns();
+
+            setTimeout(update, 5000);
           });
-
-          findBtns();
-
-          setTimeout(update, 5000);
         };
 
         update();
       })
-      .catch((parsingError) => {
+      .catch((e) => {
         watchedState.rssForm.state = 'invalid';
-        [watchedState.rssForm.errors] = parsingError.errors;
+        watchedState.rssForm.errors = e.message;
       });
   });
 };
