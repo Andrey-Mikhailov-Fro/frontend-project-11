@@ -108,6 +108,10 @@ export default (texts) => {
         };
 
         update();
+      })
+      .catch((parsingError) => {
+        watchedState.rssForm.state = 'invalid';
+        [watchedState.rssForm.errors] = parsingError.errors;
       });
   });
 };
