@@ -1,10 +1,11 @@
-const addFeed = (element) => {
+const addFeed = (element, url) => {
   const title = element.querySelector('title');
   const description = element.querySelector('description');
 
   const thisFeed = {
     head: title.textContent,
     description: description.textContent,
+    url,
   };
 
   return thisFeed;
@@ -25,7 +26,7 @@ const addPost = (element) => {
   return thisPost;
 };
 
-export default (html) => {
+export default (html, url) => {
   const parser = new DOMParser();
   const parsedPage = parser.parseFromString(html, 'text/xml');
   const parsingError = parsedPage.querySelector('parsererror');
@@ -38,7 +39,7 @@ export default (html) => {
     if (testRss === null) {
       throw new Error();
     } else {
-      const feed = addFeed(parsedPage);
+      const feed = addFeed(parsedPage, url);
 
       const prePosts = parsedPage.querySelectorAll('item');
       const posts = Array.from(prePosts).map((prePost) => addPost(prePost));

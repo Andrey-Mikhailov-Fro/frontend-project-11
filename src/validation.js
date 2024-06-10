@@ -1,8 +1,6 @@
 import { string, setLocale } from 'yup';
 
-const loaded = [];
-
-const validate = (rssUrl) => {
+const validate = (rssUrl, loadedFeeds) => {
   setLocale({
     mixed: {
       notOneOf: 'rssForm.errors.alreadyExist',
@@ -12,6 +10,8 @@ const validate = (rssUrl) => {
       url: 'rssForm.errors.url',
     },
   });
+
+  const loaded = loadedFeeds.map((feed) => feed.url);
 
   const schema = string().required().notOneOf(loaded).url();
 

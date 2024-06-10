@@ -39,14 +39,14 @@ export default (texts) => {
     event.preventDefault();
 
     const url = input.value;
-    const validationResult = validate(url);
+    const validationResult = validate(url, state.feeds);
 
     validationResult.then(() => {
       watchedState.rssForm.state = 'valid';
       watchedState.rssForm.errors = '';
     }).then(() => getFlow(url))
       .then((flow) => {
-        const { feed, posts } = parser(flow.data.contents);
+        const { feed, posts } = parser(flow.data.contents, url);
         watchedState.rssForm.state = 'success';
 
         feed.id = generateUniqID(state.feeds);

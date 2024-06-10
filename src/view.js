@@ -1,7 +1,10 @@
-import './styles.scss';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const formFeeds = (section, feedContainer) => {
   const list = section.querySelector('ul');
+
+  const newList = document.createElement('ul');
+  newList.classList.add('list-group', 'border-0', 'rounded-0');
 
   feedContainer.forEach((feed) => {
     const place = document.createElement('li');
@@ -15,14 +18,17 @@ const formFeeds = (section, feedContainer) => {
     listItemDescription.classList.add('m-0', 'small', 'text-black-50');
     listItemDescription.textContent = feed.description;
 
-    place.replaceChildren(listItemHead, listItemDescription);
-    list.append(place);
+    place.append(listItemHead, listItemDescription);
+    newList.append(place);
   });
+
+  list.replaceWith(newList);
 };
 
 const formPostList = (section, postContainer) => {
   const oldList = section.querySelector('ul');
   const newList = document.createElement('ul');
+  newList.classList.add('list-group', 'border-0', 'rounded-0');
 
   postContainer.forEach((post) => {
     const place = document.createElement('li');
@@ -45,7 +51,7 @@ const formPostList = (section, postContainer) => {
     viewBtn.setAttribute('data-bs-target', '#modal');
     viewBtn.textContent = 'Просмотр';
 
-    place.replaceChildren(listItemName, viewBtn);
+    place.append(listItemName, viewBtn);
     newList.append(place);
   });
 
