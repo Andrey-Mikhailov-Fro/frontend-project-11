@@ -32,6 +32,8 @@ export default (html, url) => {
   const parsingError = parsedPage.querySelector('parsererror');
 
   if (parsingError) {
+    /* const errorDescription = parsingError.querySelector('div').textContent;
+    но что с ней делать, я, честно говоря, не понимаю. В ТЗ ни слова об этом. */
     throw new Error('rssForm.errors.empty');
   } else {
     const testRss = parsedPage.querySelector('description');

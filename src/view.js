@@ -1,5 +1,3 @@
-import 'bootstrap/dist/css/bootstrap.min.css';
-
 const formFeeds = (section, feedContainer) => {
   const list = section.querySelector('ul');
 
@@ -102,13 +100,19 @@ export default (texts) => {
 
   const render = (path, value) => {
     if (path === 'rssForm.state') {
+      if (value === 'loading') {
+        submitBtn.disabled = true;
+      }
+
       if (value === 'invalid') {
+        submitBtn.disabled = false;
         input.classList.add('is-invalid');
         feedback.classList.add('text-danger');
       } else if (value === 'valid') {
         input.classList.remove('is-invalid');
         feedback.classList.remove('text-danger');
       } else if (value === 'success') {
+        submitBtn.disabled = false;
         feedback.classList.add('text-success');
         feedback.textContent = texts.t('rssForm.success');
         input.value = '';

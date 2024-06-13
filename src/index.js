@@ -4,14 +4,18 @@ import i18next from 'i18next';
 import ru from './locales';
 import rss from './rss';
 
-const texts = i18next.createInstance();
+const getTexts = () => {
+  const texts = i18next.createInstance();
 
-texts.init({
-  lng: 'ru',
-  debug: false,
-  resources: {
-    ru,
-  },
-});
+  texts.init({
+    lng: 'ru',
+    debug: false,
+    resources: {
+      ru,
+    },
+  });
 
-rss(texts);
+  return texts;
+};
+
+rss(getTexts());

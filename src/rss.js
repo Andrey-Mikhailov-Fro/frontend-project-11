@@ -1,7 +1,7 @@
 import onChange from 'on-change';
 import validate from './validation';
 import view from './view';
-import parser from './parser';
+import parse from './parser';
 import getFlow from './getFlow';
 
 const generateUniqID = (items) => {
@@ -38,6 +38,7 @@ export default (texts) => {
   rssForm.addEventListener('submit', (event) => {
     event.preventDefault();
 
+    watchedState.rssForm.state = 'loading';
     const url = input.value;
     const validationResult = validate(url, state.feeds);
 
@@ -46,7 +47,7 @@ export default (texts) => {
       watchedState.rssForm.errors = '';
     }).then(() => getFlow(url))
       .then((flow) => {
-        const { feed, posts } = parser(flow.data.contents, url);
+        const { feed, posts } = parse(flow.data.contents, url);
         watchedState.rssForm.state = 'success';
 
         feed.id = generateUniqID(state.feeds);
@@ -87,23 +88,25 @@ export default (texts) => {
         };
 
         const update = () => {
-          const updatedFlow = getFlow(url);
-          updatedFlow.then((data) => {
-            const refresh = parser(data.data.contents);
+          state.feeds.forEach((feedForUpdate) => {
+            const updatedFlow = getFlow(feedForUpdate.url);
+            updatedFlow.then((flowData) => {
+              const refresh = parse(flowData.data.contents);
 
-            refresh.posts.forEach((post) => {
-              const id = generateUniqID(state.posts);
-              const notLoaded = state.posts.every((loadedPost) => (loadedPost.head !== post.head)
+              refresh.posts.forEach((post) => {
+                const id = generateUniqID(state.posts);
+                const notLoaded = state.posts.every((loadedPost) => (loadedPost.head !== post.head)
             && (loadedPost.link !== post.link)
             && (loadedPost.description !== post.description));
-              const preparedPost = { id, ...post };
+                const preparedPost = { id, ...post };
 
-              if (notLoaded) {
-                watchedState.posts = [...state.posts, preparedPost];
-              }
+                if (notLoaded) {
+                  watchedState.posts = [...state.posts, preparedPost];
+                }
+              });
+
+              findBtns();
             });
-
-            findBtns();
 
             setTimeout(update, 5000);
           });
