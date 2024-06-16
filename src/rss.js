@@ -88,6 +88,8 @@ export default (texts) => {
         };
 
         const update = () => {
+          const updateInterval = 5000;
+
           state.feeds.forEach((feedForUpdate) => {
             const updatedFlow = getFlow(feedForUpdate.url);
             updatedFlow.then((flowData) => {
@@ -108,7 +110,7 @@ export default (texts) => {
               findBtns();
             });
 
-            setTimeout(update, 5000);
+            setTimeout(update, updateInterval);
           });
         };
 
