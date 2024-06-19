@@ -1,16 +1,9 @@
 import onChange from 'on-change';
+import uniqueId from 'lodash/uniqueId';
 import validate from './validation';
 import view from './view';
 import parse from './parser';
 import getFlow from './getFlow';
-
-const generateUniqID = (items) => {
-  const exisitngIds = items.map((item) => item.id);
-  const lastId = exisitngIds.length === 0 ? 1 : exisitngIds.at(-1);
-  const newId = lastId + 1;
-  exisitngIds.push(newId);
-  return newId;
-};
 
 export default (texts) => {
   const state = {
@@ -19,10 +12,10 @@ export default (texts) => {
       errors: '',
     },
     rssModalCard: {
-      activePost: {},
+      activePost: null,
     },
     uiState: {
-      readPosts: [],
+      readPosts: new Set(),
     },
     feeds: [],
     posts: [],
@@ -45,77 +38,74 @@ export default (texts) => {
     validationResult.then(() => {
       watchedState.rssForm.state = 'valid';
       watchedState.rssForm.errors = '';
-    }).then(() => getFlow(url))
-      .then((flow) => {
-        const { feed, posts } = parse(flow.data.contents, url);
-        watchedState.rssForm.state = 'success';
+      return getFlow(url);
+    }).then((flow) => {
+      const { feed, posts } = parse(flow.data.contents, url);
+      watchedState.rssForm.state = 'success';
 
-        feed.id = generateUniqID(state.feeds);
-        watchedState.feeds = [...state.feeds, feed];
+      feed.id = uniqueId();
+      watchedState.feeds = [...state.feeds, feed];
 
-        posts.forEach((post) => {
-          const id = generateUniqID(state.posts);
-          const notAlreadyLoaded = state.posts.every((loadedPost) => (loadedPost.head !== post.head)
+      posts.forEach((post) => {
+        const id = uniqueId();
+        const notAlreadyLoaded = state.posts.every((loadedPost) => (loadedPost.head !== post.head)
           && (loadedPost.link !== post.link)
           && (loadedPost.description !== post.description));
-          const preparedPost = { id, ...post };
+        const preparedPost = { id, ...post };
 
-          if (notAlreadyLoaded) {
-            watchedState.posts = [...state.posts, preparedPost];
-          }
-        });
+        if (notAlreadyLoaded) {
+          watchedState.posts = [...state.posts, preparedPost];
+        }
+      });
 
-        const findBtns = () => {
-          const btns = document.querySelectorAll('[data-bs-toggle]');
+      const findBtns = () => {
+        const btns = document.querySelectorAll('[data-bs-toggle]');
 
-          btns.forEach((button) => {
-            button.addEventListener('click', () => {
-              const currentId = button.dataset.id;
-              const isNewReadPost = watchedState.uiState.readPosts
-                .every((post) => post.id !== currentId);
+        btns.forEach((button) => {
+          button.addEventListener('click', () => {
+            const currentId = button.dataset.id;
+            const readPost = state.posts.find((post) => post.id.toString() === currentId);
+            const isNewReadPost = watchedState.uiState.readPosts.has(readPost);
+            readPost.read = true;
 
-              const readPost = state.posts.find((post) => post.id.toString() === currentId);
+            if (isNewReadPost) {
+              watchedState.uiState.readPosts.add(readPost);
+            }
 
-              readPost.read = true;
-
-              if (isNewReadPost) {
-                watchedState.uiState.readPosts = [...state.uiState.readPosts, readPost];
-              }
-
-              watchedState.rssModalCard.activePost = readPost;
-            });
+            watchedState.rssModalCard.activePost = readPost;
           });
-        };
+        });
+      };
 
-        const update = () => {
-          const updateInterval = 5000;
+      const update = () => {
+        const updateInterval = 5000;
 
-          state.feeds.forEach((feedForUpdate) => {
-            const updatedFlow = getFlow(feedForUpdate.url);
-            updatedFlow.then((flowData) => {
-              const refresh = parse(flowData.data.contents);
+        const completedChecks = state.feeds.map((feedForUpdate) => {
+          const updatedFlow = getFlow(feedForUpdate.url);
+          return updatedFlow.then((flowData) => {
+            const refresh = parse(flowData.data.contents);
 
-              refresh.posts.forEach((post) => {
-                const id = generateUniqID(state.posts);
-                const notLoaded = state.posts.every((loadedPost) => (loadedPost.head !== post.head)
+            refresh.posts.forEach((post) => {
+              const id = uniqueId();
+              const notLoaded = state.posts.every((loadedPost) => (loadedPost.head !== post.head)
             && (loadedPost.link !== post.link)
             && (loadedPost.description !== post.description));
-                const preparedPost = { id, ...post };
+              const preparedPost = { id, ...post };
 
-                if (notLoaded) {
-                  watchedState.posts = [...state.posts, preparedPost];
-                }
-              });
-
-              findBtns();
+              if (notLoaded) {
+                watchedState.posts = [...state.posts, preparedPost];
+              }
             });
 
-            setTimeout(update, updateInterval);
+            findBtns();
           });
-        };
+        });
 
-        update();
-      })
+        Promise.all(completedChecks).then(() => setTimeout(update, updateInterval));
+      };
+
+      update();
+    })
       .catch((error) => {
         watchedState.rssForm.state = 'invalid';
 

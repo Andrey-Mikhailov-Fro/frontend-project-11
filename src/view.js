@@ -143,20 +143,10 @@ export default (texts) => {
       modalTitle.textContent = value.head;
       modalBody.textContent = value.description;
       readAllBtn.setAttribute('href', value.link);
-    }
 
-    if (path === 'uiState.readPosts') {
-      const links = posts.querySelectorAll('a');
-      links.forEach((link) => {
-        const { id } = link.dataset;
-
-        value.forEach((post) => {
-          if (id === post.id.toString()) {
-            link.classList.remove('fw-bold');
-            link.classList.add('fw-normal');
-          }
-        });
-      });
+      const readPost = posts.querySelector(`[data-id="${value.id}"]`);
+      readPost.classList.remove('fw-bold');
+      readPost.classList.add('fw-normal');
     }
   };
 

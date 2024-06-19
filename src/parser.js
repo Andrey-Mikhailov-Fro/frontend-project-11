@@ -32,24 +32,17 @@ export default (html, url) => {
   const parsingError = parsedPage.querySelector('parsererror');
 
   if (parsingError) {
-    /* const errorDescription = parsingError.querySelector('div').textContent;
-    но что с ней делать, я, честно говоря, не понимаю. В ТЗ ни слова об этом. */
+    // eslint-disable-next-line no-unused-vars
+    const errorDescription = parsingError.querySelector('div').textContent;
     throw new Error('rssForm.errors.empty');
   } else {
-    const testRss = parsedPage.querySelector('description');
+    const feed = addFeed(parsedPage, url);
+    const prePosts = parsedPage.querySelectorAll('item');
+    const posts = Array.from(prePosts).map((prePost) => addPost(prePost));
 
-    if (testRss === null) {
-      throw new Error();
-    } else {
-      const feed = addFeed(parsedPage, url);
-
-      const prePosts = parsedPage.querySelectorAll('item');
-      const posts = Array.from(prePosts).map((prePost) => addPost(prePost));
-
-      return {
-        feed,
-        posts,
-      };
-    }
+    return {
+      feed,
+      posts,
+    };
   }
 };
