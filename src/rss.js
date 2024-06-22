@@ -28,6 +28,52 @@ export default (texts) => {
 
   const watchedState = onChange(state, render);
 
+  const findBtns = () => {
+    const btns = document.querySelectorAll('[data-bs-toggle]');
+
+    btns.forEach((button) => {
+      button.addEventListener('click', () => {
+        const currentId = button.dataset.id;
+        const readPost = state.posts.find((post) => post.id.toString() === currentId);
+        const isNewReadPost = watchedState.uiState.readPosts.has(readPost);
+        readPost.read = true;
+
+        if (isNewReadPost) {
+          watchedState.uiState.readPosts.add(readPost);
+        }
+
+        watchedState.rssModalCard.activePost = readPost;
+      });
+    });
+  };
+
+  const update = () => {
+    const updateInterval = 5000;
+
+    const completedChecks = state.feeds.map((feedForUpdate) => {
+      const updatedFlow = getFlow(feedForUpdate.url);
+      return updatedFlow.then((flowData) => {
+        const refresh = parse(flowData.data.contents);
+
+        refresh.posts.forEach((post) => {
+          const id = uniqueId();
+          const notLoaded = state.posts.every((loadedPost) => (loadedPost.head !== post.head)
+        && (loadedPost.link !== post.link)
+        && (loadedPost.description !== post.description));
+          const preparedPost = { id, ...post };
+
+          if (notLoaded) {
+            watchedState.posts = [...state.posts, preparedPost];
+          }
+        });
+
+        findBtns();
+      });
+    });
+
+    Promise.all(completedChecks).then(() => setTimeout(update, updateInterval));
+  };
+
   rssForm.addEventListener('submit', (event) => {
     event.preventDefault();
 
@@ -58,53 +104,7 @@ export default (texts) => {
         }
       });
 
-      const findBtns = () => {
-        const btns = document.querySelectorAll('[data-bs-toggle]');
-
-        btns.forEach((button) => {
-          button.addEventListener('click', () => {
-            const currentId = button.dataset.id;
-            const readPost = state.posts.find((post) => post.id.toString() === currentId);
-            const isNewReadPost = watchedState.uiState.readPosts.has(readPost);
-            readPost.read = true;
-
-            if (isNewReadPost) {
-              watchedState.uiState.readPosts.add(readPost);
-            }
-
-            watchedState.rssModalCard.activePost = readPost;
-          });
-        });
-      };
-
-      const update = () => {
-        const updateInterval = 5000;
-
-        const completedChecks = state.feeds.map((feedForUpdate) => {
-          const updatedFlow = getFlow(feedForUpdate.url);
-          return updatedFlow.then((flowData) => {
-            const refresh = parse(flowData.data.contents);
-
-            refresh.posts.forEach((post) => {
-              const id = uniqueId();
-              const notLoaded = state.posts.every((loadedPost) => (loadedPost.head !== post.head)
-            && (loadedPost.link !== post.link)
-            && (loadedPost.description !== post.description));
-              const preparedPost = { id, ...post };
-
-              if (notLoaded) {
-                watchedState.posts = [...state.posts, preparedPost];
-              }
-            });
-
-            findBtns();
-          });
-        });
-
-        Promise.all(completedChecks).then(() => setTimeout(update, updateInterval));
-      };
-
-      update();
+      findBtns();
     })
       .catch((error) => {
         watchedState.rssForm.state = 'invalid';
@@ -117,4 +117,6 @@ export default (texts) => {
         }
       });
   });
+
+  update();
 };
