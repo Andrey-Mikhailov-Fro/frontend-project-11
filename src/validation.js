@@ -11,11 +11,11 @@ const validate = (rssUrl, loadedFeeds) => {
     },
   });
 
-  const loaded = loadedFeeds.map((feed) => feed.url);
+  const loaded = loadedFeeds.flatMap((feed) => [feed.url.toString(), feed.altUrl.toString()]);
 
   const schema = string().required().notOneOf(loaded).url();
 
-  return schema.validate(rssUrl).then(() => {
+  return schema.validate(rssUrl.toString()).then(() => {
     if (!loaded.includes(rssUrl)) {
       loaded.push(rssUrl);
     }

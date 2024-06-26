@@ -1,11 +1,16 @@
 const addFeed = (element, url) => {
   const title = element.querySelector('title');
   const description = element.querySelector('description');
+  const altProtocol = url.protocol === 'http:' ? 'https:' : 'http:';
+  const href = url.toString();
+  const altUrl = new URL(href);
+  altUrl.protocol = altProtocol;
 
   const thisFeed = {
     head: title.textContent,
     description: description.textContent,
     url,
+    altUrl,
   };
 
   return thisFeed;

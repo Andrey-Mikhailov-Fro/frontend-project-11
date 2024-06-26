@@ -53,7 +53,7 @@ export default (texts) => {
     const completedChecks = state.feeds.map((feedForUpdate) => {
       const updatedFlow = getFlow(feedForUpdate.url);
       return updatedFlow.then((flowData) => {
-        const refresh = parse(flowData.data.contents);
+        const refresh = parse(flowData.data.contents, feedForUpdate.url);
 
         refresh.posts.forEach((post) => {
           const id = uniqueId();
@@ -78,7 +78,7 @@ export default (texts) => {
     event.preventDefault();
 
     watchedState.rssForm.state = 'loading';
-    const url = input.value;
+    const url = new URL(input.value);
     const validationResult = validate(url, state.feeds);
 
     validationResult.then(() => {
