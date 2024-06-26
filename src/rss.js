@@ -78,7 +78,7 @@ export default (texts) => {
     event.preventDefault();
 
     watchedState.rssForm.state = 'loading';
-    const url = new URL(input.value);
+    const url = input.value;
     const validationResult = validate(url, state.feeds);
 
     validationResult.then(() => {
